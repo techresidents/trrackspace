@@ -1,0 +1,8 @@
+Tech Residents Rackspace Library
+
+INSTALL:
+pip install git+ssh://dev.techresidents.com/tr/repos/techresidents/lib/python/trrackspace#egg=trrackspace
+
+DEVELOPMENT
+mkvirtualenv trrackspace
+python setup.py develop
