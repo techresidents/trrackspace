@@ -1,5 +1,5 @@
 from trrackspace.http.rest.auth import RestAuthenticator
-from trrackspace.identity import IdentityServiceClient
+from trrackspace.services.identity.client import IdentityServiceClient
 
 class RackspaceAuthenticator(RestAuthenticator):
     def __init__(self,
