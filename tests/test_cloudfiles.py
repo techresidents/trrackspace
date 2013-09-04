@@ -571,6 +571,45 @@ class TestCloudfilesStorageObject(unittest.TestCase):
 
         obj.delete()
 
+    def test_update_cors(self):
+        cors = {
+            "access-control-allow-origin": "*",
+            "access-control-max-age": "3600"
+        }
+        object_name = "test_cors.txt"
+        obj = self.container.create_object(object_name)
+        object_data = "data"
+        obj.write(object_data)
+
+        self.assertEqual(len(obj.cors), 0)
+        obj.update_cors(cors)
+        self.assertEqual(obj.cors["access-control-allow-origin"], "*")
+        self.assertEqual(obj.cors["access-control-max-age"], "3600")
+        
+        obj = self.container.get_object(object_name)
+        self.assertEqual(obj.cors["access-control-allow-origin"], "*")
+        self.assertEqual(obj.cors["access-control-max-age"], "3600")
+        obj.delete()
+
+        #test creation with CORS headers
+        object_name = "test_cors_new.txt"
+        obj = self.container.create_object(object_name, cors=cors)
+        self.assertEqual(obj.cors["access-control-allow-origin"], "*")
+        self.assertEqual(obj.cors["access-control-max-age"], "3600")
+        obj.write(object_data)
+
+        obj = self.container.get_object(object_name)
+        self.assertEqual(obj.cors["access-control-allow-origin"], "*")
+        self.assertEqual(obj.cors["access-control-max-age"], "3600")
+        
+        #test invalid header
+        cors = { "invalid-key": "test" }
+        with self.assertRaises(Exception):
+            obj.update_cors(cors)
+
+        obj.delete()
+        
+
     def test_copy_to(self):
         object_name = "test.txt"
         obj = self.container.create_object(object_name)

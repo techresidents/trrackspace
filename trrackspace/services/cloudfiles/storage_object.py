@@ -14,7 +14,8 @@ from trrackspace.services.cloudfiles.errors import NoSuchObject
 class StorageObject(object):
     """Cloudfiles storage object"""
     def __init__(self, container, name, exists=False,
-            content_type=None, metadata=None, delete_at_timestamp=None):
+            content_type=None, metadata=None, cors=None,
+            delete_at_timestamp=None):
         """StorageObject constructor
 
             Args:
@@ -25,6 +26,11 @@ class StorageObject(object):
                 content_type: optional content type. If not provided
                     it will be determined by its name.
                 metadata: dict of object metadata headers
+                cors: dict of cors heaaders:
+                    Access-Control-Allow-Credentials, Access-Control-Allow-Methods,
+                    Access-Control-Allow-Origin, Access-Control-Expose-Headers,
+                    Access-Control-Max-Age, Access-Control-Request-Headers,
+                    Access-Control-Request-Method, Origin
                 delete_at_timestamp: unix timestamp at which object
                     should be deleted.
             Raises:
@@ -37,7 +43,18 @@ class StorageObject(object):
         self.content_type = content_type or \
                 mimetypes.guess_type(name)[0] or \
                 "application/octet-stream"
-        self.metadata = metadata or {}
+        self.metadata = self._validate_metadata(metadata)
+        self.cors_headers = [
+                'access-control-allow-credentials',
+                'access-control-allow-methods', 
+                'access-control-allow-origin',
+                'access-control-expose-headers',
+                'access-control-max-age',
+                'access-control-request-headers',
+                'access-control-request-method',
+                'origin'
+        ]
+        self.cors = self._validate_cors(cors)
         self.delete_at_timestamp = delete_at_timestamp
 
         self.manifest = None
@@ -48,6 +65,50 @@ class StorageObject(object):
         if self.exists:
             self.load()
     
+    def _validate_metadata(self, metadata):
+        """Validate dict of metadata headers
+
+        Args:
+            metadata: dict of metadata headers
+        Returns:
+            validated metadata dict
+        Raises:
+            ValueError
+        """
+        metadata = metadata or {}
+        valid_prefixes = ["x-object-meta-", "x-remove-object-meta-"]
+        for key in metadata or {}:
+            key = key.lower()
+            for prefix in valid_prefixes:
+                if key.startswith(prefix):
+                    break
+            else:
+                msg = "'%s' is invalid: must start with one of: %s" % \
+                        (key, valid_prefixes)
+                raise ValueError(msg)
+        return metadata
+
+    def _validate_cors(self, cors):
+        """Validate dict of CORS headers
+
+        Args:
+            cors: dict of CORS headers
+        Returns:
+            validated CORS dict
+        Raises:
+            ValueError
+        """
+        cors = cors or {}
+        for key in cors or {}:
+            key = key.lower()
+            if key in self.cors_headers:
+                break
+            else:
+                msg = "'%s' is invalid: must be one of: %s" % \
+                        (key, self.cors_headers)
+                raise ValueError(msg)
+        return cors
+
     @property 
     def path(self):
         """Returns storage object path"""
@@ -124,6 +185,8 @@ class StorageObject(object):
                         self.delete_at_timestamp = int(value)
                     elif key.startswith('x-object-meta-'):
                         self.metadata[key.lower()] = value
+                    elif key.lower() in self.cors_headers:
+                        self.cors[key.lower()] = value
         except HttpError as e:
             if e.status == 404:
                 raise NoSuchObject(self.name)
@@ -253,7 +316,14 @@ class StorageObject(object):
         headers = {
             "Content-Type": self.content_type
         }
+
+        #add metadata headers
         headers.update(self.metadata)
+
+        #add cors headers
+        headers.update(self.cors)
+        
+        #add delete at header
         if self.delete_at_timestamp:
             header["x-delete-at"] = str(int(self.delete_at_timestamp))
         
@@ -288,16 +358,7 @@ class StorageObject(object):
         Raises:
             ResponseError, RackspaceError
         """
-        valid_prefixes = ["x-object-meta-", "x-remove-object-meta-"]
-        for key in metadata or {}:
-            key = key.lower()
-            for prefix in valid_prefixes:
-                if key.startswith(prefix):
-                    break
-            else:
-                msg = "'%s' is invalid: must start with one of: %s" % \
-                        (key, valid_prefixes)
-                raise ValueError(msg)
+        metadata = self._validate_metadata(metadata)
 
         cloudfiles = self.container.client.cloudfiles
         response_context = cloudfiles.send_request("POST", self.path, None, metadata)
@@ -311,6 +372,36 @@ class StorageObject(object):
                 self.metadata.pop(key, None)
             else:
                 self.metadata[key] = value
+
+    @to_error
+    def update_cors(self, cors):
+        """Update Cross-Origin Resource Sharing headers
+        
+        Headers must one of the following:
+            Access-Control-Allow-Credentials, Access-Control-Allow-Methods,
+            Access-Control-Allow-Origin, Access-Control-Expose-Headers,
+            Access-Control-Max-Age, Access-Control-Request-Headers,
+            Access-Control-Request-Method, Origin
+        
+        Note that updates to CORS headers on an object that has already
+        been pushed to the CDN will not be visible until the TTL
+        expires or the object has been purged from the CDN.
+
+        Args:
+            cors: dict of CORS headers to update.
+        Raises:
+            ResponseError, RackspaceError
+        """
+        cors = self._validate_cors(cors)
+
+        cloudfiles = self.container.client.cloudfiles
+        response_context = cloudfiles.send_request("POST", self.path, None, cors)
+        with response_context as response:
+            response.read()
+
+        #update cors
+        for key, value in cors.items():
+            self.cors[key] = value
 
     @to_error
     def copy_to(self, destination, container=None):

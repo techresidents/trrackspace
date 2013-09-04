@@ -269,7 +269,8 @@ class Container(object):
             marker = objects[-1]["name"]
 
     @to_error
-    def create_object(self, name):
+    def create_object(self, name, content_type=None,
+            metadata=None, cors=None, delete_at_timestamp=None):
         """Create a Cloudfiles storage object.
         
         Note that the storage object will not actually be created
@@ -278,12 +279,18 @@ class Container(object):
 
         Args:
             name: storage object name
+            content_type: content type
+            metadata: dict of metadata headers
+            cors: dict of CORS headers
+            delete_at_timestamp: delete at timestamp
         Returns:
             StorageObject
         Raises:
             ResponseError, RackspaceError
         """
-        return StorageObject(self, name, exists=False)
+        return StorageObject(self, name, content_type=content_type,
+                metadata=metadata, cors=cors,
+                delete_at_timestamp=delete_at_timestamp, exists=False)
     
     @to_error
     def extract_archive(self, archive_path, type=None):
