@@ -14,7 +14,7 @@ def find_packages():
 
 setup(
     name='trrackspace',
-    version = '0.3-SNAPSHOT',
+    version = '0.3.0',
     author = 'Tech Residents, Inc.',
     packages = find_packages(),
     license = open('LICENSE').read(),
