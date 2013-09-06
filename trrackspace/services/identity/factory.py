@@ -1,3 +1,4 @@
+from trhttp.rest.client import RestClient
 from trpycore.factory.base import Factory
 
 from trrackspace.services.identity.client import IdentityServiceClient
@@ -14,7 +15,7 @@ class IdentityServiceClientFactory(Factory):
             retries=2,
             keepalive=True,
             proxy=None,
-            connection_class=None,
+            rest_client_class=RestClient,
             debug_level=0):
         """IdentityServiceClientFactory constructor
 
@@ -39,7 +40,7 @@ class IdentityServiceClientFactory(Factory):
                 If false, connections will be closed immediately following
                 each api request.
             proxy: (host, port) tuple specifying proxy for connection
-            connection_class: optional HTTP connectino class. It not 
+            rest_client_class: optional RestClient class. If not 
                 specified sensible default will be used.
             debug_level: httplib debug level. Setting this to 1 will log
                 http requests and responses which is very useful for 
@@ -53,7 +54,7 @@ class IdentityServiceClientFactory(Factory):
         self.retries = retries
         self.keepalive = keepalive
         self.proxy = proxy
-        self.connection_class = connection_class
+        self.rest_client_class = rest_client_class
         self.debug_level = debug_level
         self.username = username
 
@@ -68,5 +69,5 @@ class IdentityServiceClientFactory(Factory):
                 retries=self.retries,
                 keepalive=self.keepalive,
                 proxy=self.proxy,
-                connection_class=self.connection_class,
+                rest_client_class=self.rest_client_class,
                 debug_level=self.debug_level)
