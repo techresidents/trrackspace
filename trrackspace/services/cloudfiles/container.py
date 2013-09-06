@@ -39,7 +39,7 @@ class Container(object):
         self._cdn_ssl_uri = None
         self._cdn_streaming_uri = None
         self.cdn_ttl = None
-        self.cdn_log_retention = None
+        self.cdn_log_retention = False
 
         self.load()
     

@@ -35,7 +35,7 @@ class CloudfilesClient(object):
             retries=2,
             keepalive=True,
             proxy=None,
-            connection_class=None,
+            rest_client_class=RestClient,
             debug_level=0):
         """CloudfilesClient constructor
 
@@ -72,7 +72,7 @@ class CloudfilesClient(object):
                 If false, connections will be closed immediately following
                 each api request.
             proxy: (host, port) tuple specifying proxy for connection
-            connection_class: optional HTTP connectino class. It not 
+            rest_client_class: optional RestClient class. If not 
                 specified sensible default will be used.
             debug_level: httplib debug level. Setting this to 1 will log
                 http requests and responses which is very useful for 
@@ -94,7 +94,7 @@ class CloudfilesClient(object):
                     retries=retries,
                     keepalive=keepalive,
                     proxy=proxy,
-                    connection_class=connection_class,
+                    rest_client_class=rest_client_class,
                     debug_level=debug_level)
         
         self.region = region or self.identity_client.user.default_region
@@ -107,7 +107,7 @@ class CloudfilesClient(object):
                 retries=retries,
                 keepalive=keepalive,
                 proxy=proxy,
-                connection_class=connection_class,
+                rest_client_class=rest_client_class,
                 debug_level=debug_level)
 
         self.cloudfiles_cdn = CloudfilesCdn(
@@ -117,7 +117,7 @@ class CloudfilesClient(object):
                 retries=retries,
                 keepalive=keepalive,
                 proxy=proxy,
-                connection_class=connection_class,
+                rest_client_class=rest_client_class,
                 debug_level=debug_level)
 
         self.load()
@@ -297,8 +297,8 @@ class CloudfilesClient(object):
             response.read()
                 
 
-class Cloudfiles(RestClient):
-    """Cloudfiles Rest Client"""
+class Cloudfiles(object):
+    """Cloudfiles Client"""
     def __init__(self,
             region,
             identity_client,
@@ -308,7 +308,7 @@ class Cloudfiles(RestClient):
             retries=1,
             keepalive=True,
             proxy=None,
-            connection_class=None,
+            rest_client_class=None,
             debug_level=0):
 
         self.identity_client = identity_client
@@ -323,20 +323,28 @@ class Cloudfiles(RestClient):
                 endpoint = service.endpoints.get_endpoint(region).internal_url
             else:
                 endpoint = service.endpoints.get_endpoint(region).public_url
+
+        self.endpoint = endpoint
+        self.timeout = timeout
+        self.retries = retries
+        self.keepalive = keepalive
+        self.debug_level = debug_level
         
-        super(Cloudfiles, self).__init__(
-            endpoint=endpoint,
-            timeout=timeout,
-            retries=retries,
-            keepalive=keepalive,
-            proxy=proxy,
-            connection_class=connection_class,
-            authenticator=self.identity_client,
-            debug_level=debug_level)
+        self.rest_client = rest_client_class( 
+                endpoint=endpoint,
+                timeout=timeout,
+                retries=retries,
+                keepalive=keepalive,
+                proxy=proxy,
+                authenticator=self.identity_client,
+                debug_level=debug_level)
+
+    def send_request(self, *args, **kwargs):
+        return self.rest_client.send_request(*args, **kwargs)
 
 
-class CloudfilesCdn(RestClient):
-    """Cloudfiles CDN Rest Client"""
+class CloudfilesCdn(object):
+    """Cloudfiles CDN Client"""
     def __init__(self,
             region,
             identity_client,
@@ -345,7 +353,7 @@ class CloudfilesCdn(RestClient):
             retries=1,
             keepalive=True,
             proxy=None,
-            connection_class=None,
+            rest_client_class=RestClient,
             debug_level=0):
 
         self.identity_client = identity_client
@@ -358,12 +366,20 @@ class CloudfilesCdn(RestClient):
             
             endpoint = service.endpoints.get_endpoint(region).public_url
 
-        super(CloudfilesCdn, self).__init__(
-            endpoint=endpoint,
-            timeout=timeout,
-            retries=retries,
-            keepalive=keepalive,
-            proxy=proxy,
-            connection_class=connection_class,
-            authenticator=self.identity_client,
-            debug_level=debug_level)
+        self.endpoint = endpoint
+        self.timeout = timeout
+        self.retries = retries
+        self.keepalive = keepalive
+        self.debug_level = debug_level
+        
+        self.rest_client = rest_client_class(
+                endpoint=endpoint,
+                timeout=timeout,
+                retries=retries,
+                keepalive=keepalive,
+                proxy=proxy,
+                authenticator=self.identity_client,
+                debug_level=debug_level)
+
+    def send_request(self, *args, **kwargs):
+        return self.rest_client.send_request(*args, **kwargs)

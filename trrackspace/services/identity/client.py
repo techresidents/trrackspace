@@ -9,7 +9,7 @@ from trrackspace.services.identity.catalog import ServiceCatalog
 from trrackspace.services.identity.token import Token
 from trrackspace.services.identity.user import User
 
-class IdentityServiceClient(RestClient, RestAuthenticator):
+class IdentityServiceClient(RestAuthenticator):
     """Rackspace identity service client."""
 
     def __init__(self,
@@ -21,7 +21,7 @@ class IdentityServiceClient(RestClient, RestAuthenticator):
             retries=2,
             keepalive=True,
             proxy=None,
-            connection_class=None,
+            rest_client_class=RestClient,
             debug_level=0):
         """IdentityServiceClient constructor
 
@@ -42,7 +42,7 @@ class IdentityServiceClient(RestClient, RestAuthenticator):
                 If false, connections will be closed immediately following
                 each api request.
             proxy: (host, port) tuple specifying proxy for connection
-            connection_class: optional HTTP connectino class. It not 
+            rest_client_class: optional RestClient class. If not 
                 specified sensible default will be used.
             debug_level: httplib debug level. Setting this to 1 will log
                 http requests and responses which is very useful for 
@@ -60,19 +60,32 @@ class IdentityServiceClient(RestClient, RestAuthenticator):
 
         if endpoint is None:
             endpoint = "https://identity.api.rackspacecloud.com/v2.0"
+        
+        self.endpoint = endpoint
+        self.timeout = timeout
+        self.retries = retries
+        self.keepalive = keepalive
+        self.debug_level = debug_level
+        
+        self.rest_client = rest_client_class(
+                endpoint=endpoint,
+                timeout=timeout,
+                retries=retries,
+                keepalive=keepalive,
+                proxy=proxy,
+                authenticator=self,
+                debug_level=debug_level)
 
-        super(IdentityServiceClient, self).__init__(
-            endpoint=endpoint,
-            timeout=timeout,
-            retries=retries,
-            keepalive=keepalive,
-            proxy=proxy,
-            connection_class=connection_class,
-            authenticator=self,
-            debug_level=debug_level)
-    
+    def send_request(self, *args, **kwargs):
+        return self.rest_client.send_request(*args, **kwargs)
+
     @to_error
-    def authenticate(self, force=False):
+    def authenticate(self, rest_client, force=False):
+        #authenticate will be called from rest_client_class
+        #constructor prior to the assiginment to self.rest_client
+        #so assign it now since we need it to authenticate.
+        self.rest_client = rest_client
+
         if not self.token.id or force:
             if self.api_key is not None:
                 result = self.authenticate_api_key(

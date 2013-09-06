@@ -25,8 +25,9 @@ class TestCloudfiles(unittest.TestCase):
                 servicenet=False,
                 debug_level=0)
 
-        cls.container_name = "tr_unittest"    
+        cls.container_name = "tr_unittest_%s" % int(time.time())    
         cls.container = cls.cloudfiles.create_container(cls.container_name)
+        cls.container.enable_cdn()
     
     @classmethod
     def tearDownClass(cls):
@@ -74,8 +75,9 @@ class TestCloudfilesContainer(unittest.TestCase):
                 servicenet=False,
                 debug_level=0)
 
-        cls.container_name = "tr_unittest"    
+        cls.container_name = "tr_unittest_%s" % int(time.time())    
         cls.container = cls.cloudfiles.create_container(cls.container_name)
+        cls.container.enable_cdn()
     
     @classmethod
     def tearDownClass(cls):
@@ -392,8 +394,9 @@ class TestCloudfilesStorageObject(unittest.TestCase):
                 servicenet=cls.servicenet,
                 debug_level=cls.debug_level)
 
-        cls.container_name = "tr_unittest"    
+        cls.container_name = "tr_unittest_%s" % int(time.time())    
         cls.container = cls.cloudfiles.create_container(cls.container_name)
+        cls.container.enable_cdn()
     
     @classmethod
     def tearDownClass(cls):
@@ -729,8 +732,9 @@ class TestCloudfilesConnection(unittest.TestCase):
                 servicenet=False,
                 debug_level=0)
 
-        cls.container_name = "tr_unittest"    
+        cls.container_name = "tr_unittest_%s" % int(time.time())    
         cls.container = cls.cloudfiles.create_container(cls.container_name)
+        cls.container.enable_cdn()
     
     @classmethod
     def tearDownClass(cls):
