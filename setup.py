@@ -1,20 +1,12 @@
 import os
-import setuptools
-from distutils.core import setup
+from setuptools import setup, find_packages
 
-def find_packages():
-    packages = []
-    for dir,subdirs,files in os.walk('trrackspace'):
-        package = dir.replace(os.path.sep, '.')
-        if '__init__.py' not in files:
-            # not a package
-            continue
-        packages.append(package)
-    return packages
+import ez_setup
+ez_setup.use_setuptools()
 
 setup(
     name='trrackspace',
-    version = '0.3.0',
+    version = '0.4.0',
     author = 'Tech Residents, Inc.',
     packages = find_packages(),
     license = open('LICENSE').read(),
@@ -33,7 +25,11 @@ setup(
         'Topic :: Utilities',
         ],
     install_requires=[
-        'trpycore>=0.11.0',
-        'trhttp>=0.5.0'
-    ]
+        'trpycore>=0.12.0',
+        'trhttp>=0.6.0'
+    ],
+    dependency_links=[
+        'git+ssh://dev.techresidents.com/tr/repos/techresidents/lib/python/trpycore.git@0.12.0#egg=trpycore-0.12.0',
+        'git+ssh://dev.techresidents.com/tr/repos/techresidents/lib/python/trhttp.git@0.6.0#egg=trhttp-0.6.0'
+    ],
 )
