@@ -26,10 +26,10 @@ setup(
         ],
     install_requires=[
         'trpycore>=0.12.0',
-        'trhttp>=0.6.0'
+        'trhttp>=0.7.0'
     ],
     dependency_links=[
         'git+ssh://dev.techresidents.com/tr/repos/techresidents/lib/python/trpycore.git@0.12.0#egg=trpycore-0.12.0',
-        'git+ssh://dev.techresidents.com/tr/repos/techresidents/lib/python/trhttp.git@0.6.0#egg=trhttp-0.6.0'
+        'git+ssh://dev.techresidents.com/tr/repos/techresidents/lib/python/trhttp.git@0.7.0#egg=trhttp-0.7.0'
     ],
 )
