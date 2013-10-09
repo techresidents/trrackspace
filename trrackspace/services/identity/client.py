@@ -66,6 +66,7 @@ class IdentityServiceClient(RestAuthenticator):
         self.retries = retries
         self.keepalive = keepalive
         self.debug_level = debug_level
+        self.rest_client = None
         
         self.rest_client = rest_client_class(
                 endpoint=endpoint,
@@ -84,7 +85,8 @@ class IdentityServiceClient(RestAuthenticator):
         #authenticate will be called from rest_client_class
         #constructor prior to the assiginment to self.rest_client
         #so assign it now since we need it to authenticate.
-        self.rest_client = rest_client
+        if not self.rest_client:
+            self.rest_client = rest_client
 
         if not self.token.id or force:
             if self.api_key is not None:

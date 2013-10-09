@@ -62,6 +62,18 @@ class TestCloudfiles(unittest.TestCase):
 
         with self.assertRaises(NoSuchContainer):
             self.cloudfiles.get_container("blahblahblah")
+    
+    def test_expired_token(self):
+        #make sure we're authenticated
+        with self.assertRaises(NoSuchContainer):
+            self.cloudfiles.get_container("blahblahblah")
+        
+        #remove auth headers to simulate expired token
+        self.cloudfiles.cloudfiles.rest_client.auth_headers = {}
+
+        #make sure we're authenticated
+        with self.assertRaises(NoSuchContainer):
+            self.cloudfiles.get_container("blahblahblah")
 
 class TestCloudfilesContainer(unittest.TestCase):
     
